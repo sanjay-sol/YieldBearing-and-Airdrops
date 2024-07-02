@@ -1,0 +1,26 @@
+{
+  "name": "merkle-distributor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+"scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "@openzeppelin/contracts": "^5.0.2",
+    "chai": "^4.3.6",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^5.7.1",
+    "hardhat": "^2.22.6",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.3.11"
+  }
+}
