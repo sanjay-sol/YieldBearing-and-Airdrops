@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 const fs = require("fs").promises;
 
 async function main() {
-  const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const tokenAddress = "0x9A676e781A523b5d0C0e43731313A708CB607508";
 
   const data = await fs.readFile("whiteList/checkList.json", "utf8");
   const participants = JSON.parse(data);
