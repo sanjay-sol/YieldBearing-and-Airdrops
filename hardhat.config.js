@@ -14,6 +14,11 @@ module.exports = {
       },
     ],
   },
+  networks: {
+    hardhat: {
+      chainId: 31337,
+    },
+  },
   paths: {
     artifacts: "./src/artifacts",
   },
