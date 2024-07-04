@@ -8,7 +8,6 @@ async function main() {
 
   const add = await fs.readFile("whiteList/PYBT_address.json", "utf8");
   const contractAddress = JSON.parse(add);
-  //   const contractAddress = "0xfbC22278A96299D91d41C453234d97b4F5Eb9B2d"; // Replace with deployed contract address
   const PYBT = await ethers.getContractAt(
     "PrivateYieldBearingERC20",
     contractAddress

@@ -2,7 +2,6 @@ const { ethers } = require("hardhat");
 const fs = require("fs").promises;
 
 async function main() {
-  //   const walletAddresses = require("./whiteList/walletAddresses.json");
   const data = await fs.readFile("whiteList/checkList.json", "utf8");
   const participants = JSON.parse(data);
   const walletAddresses = Object.values(participants);

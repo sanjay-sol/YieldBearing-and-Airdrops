@@ -17,7 +17,7 @@ async function main() {
   }
 }
 
-// Run the script with: npx hardhat run scripts/checkBalances.js --network localhost
+// - Run:  the script with: npx hardhat run scripts/checkBalances.js --network localhost
 main()
   .then(() => process.exit(0))
   .catch((error) => {

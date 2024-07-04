@@ -2,8 +2,6 @@ const { ethers } = require("hardhat");
 const fs = require("fs").promises;
 
 async function main() {
-    // read the PYBT_address from whitelist/PYBT_address.json
-
     const add = await fs.readFile(
       "whiteList/PYBT_address.json",
       "utf8"

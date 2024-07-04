@@ -1,4 +1,6 @@
 const { ethers } = require("hardhat");
+const { MerkleTree } = require("merkletreejs");
+const { keccak256 } = require("ethers/lib/utils");
 
 async function main() {
   const [
@@ -24,20 +26,20 @@ async function main() {
   ];
 
   const leaves = walletAddresses.map((address) =>
-    ethers.utils.solidityKeccak256(["address"], [address])
+    ethers.utils.arrayify(
+      ethers.utils.solidityKeccak256(["address"], [address])
+    )
   );
 
-  // Create the Merkle Tree
-  const { MerkleTree } = require("merkletreejs");
-  const tree = new MerkleTree(leaves, ethers.utils.keccak256, {
+  // Creating  the Merkle Tree with the initial wallet addresses
+  const tree = new MerkleTree(leaves, keccak256, {
     sortPairs: true,
   });
 
-  // Deploy the PYBT contract
   const PYBT = await ethers.getContractFactory("PrivateYieldBearingERC20");
   const token = await PYBT.deploy(deployer.address, {
     value: ethers.utils.parseEther("1.0"),
-  }); // Send 1 ETH
+  }); 
 
   // Deploy the MerkleDistributor contract
   const MerkleDistributor = await ethers.getContractFactory(
@@ -46,7 +48,8 @@ async function main() {
   const distributor = await MerkleDistributor.deploy(
     token.address,
     tree.getHexRoot(),
-    ethers.utils.parseEther("1.0") // Example: 1 ETH equivalent in wei
+    ethers.utils.parseEther("1.0"), // 1 ETH equivalent in wei ( as per Assignment requirement )
+    deployer.address 
   );
 
   // Mint tokens to the distributor contract
@@ -68,18 +71,17 @@ async function main() {
     "whiteList/walletAddresses.json",
     JSON.stringify(indexedAddresses)
   );
-     await fs.writeFile(
-         "whiteList/PYBT_address.json",
-            JSON.stringify(token.address)
-     );
 
-  // Distribute tokens to whitelisted addresses
+  await fs.writeFile(
+    "whiteList/PYBT_Address.json",
+    JSON.stringify(token.address)
+  );
+
   await distributor.distributeTokens(walletAddresses);
 
   console.log("Tokens distributed to whitelisted addresses.");
 }
 
-// Execute the deployment script
 main()
   .then(() => process.exit(0))
   .catch((error) => {

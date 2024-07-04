@@ -11,7 +11,7 @@ contract PrivateYieldBearingERC20 is ERC20, Ownable {
     uint256 private _totalSupply;
     mapping(address => uint256) private _deposits;
     mapping(address => uint256) private _yieldWithdrawn;
-    mapping(address => uint256) public yieldAmount; // Added mapping for yield amounts
+    mapping(address => uint256) public yieldAmount; // - mapping for yield amounts of participantss
 
     uint256 public startTimestamp;
     uint256 public endTimestamp;
@@ -52,10 +52,10 @@ contract PrivateYieldBearingERC20 is ERC20, Ownable {
 
         uint256 yield = calculateYield(participant);
         yieldAmount[participant] = yield;
-        _totalSupply += yield; // Increment total supply
-        _yieldWithdrawn[participant] += yield; // Record withdrawn yield
+        _totalSupply += yield; // -- Increment the total supplyy
+        _yieldWithdrawn[participant] += yield; //-  Record withdrawn yield
         _deposits[participant] = 0;
-        _mint(participant, _deposits[participant] + yield); // Mint tokens including yield
+        _mint(participant, _deposits[participant] + yield); //-- Imp: Mint tokens including yield
     }
 
     function distributeFinal() external {
@@ -65,7 +65,7 @@ contract PrivateYieldBearingERC20 is ERC20, Ownable {
             address participant = _participants[i];
             uint256 yield = _yieldWithdrawn[participant];
             yieldAmount[participant] += yield;
-            yieldAmount[participant] = 0; // Reset yield amount after distribution
+            yieldAmount[participant] = 0; //-  Reseting yield amount after distribution
         }
     }
 

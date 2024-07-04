@@ -1,5 +1,3 @@
-// test/PYBT.js
-
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
@@ -52,15 +50,15 @@ describe("PYBT Contract", function () {
 
   it("should calculate yield correctly", async function () {
     await pybt.connect(owner).mint(participant.address, 1000);
-    await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 15]); // Move time forward by 15 days
+    await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 15]);
 
     const yieldAmount = await pybt.calculateYield(participant.address);
-    expect(yieldAmount).to.be.closeTo(500, 10); // Allow for minor time discrepancies
+    expect(yieldAmount).to.be.closeTo(500, 10);
   });
 
   it("should allow participants to withdraw yield", async function () {
     await pybt.connect(owner).mint(participant.address, 1000);
-    await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 30]); // Move time forward by 30 days
+    await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 30]); 
 
     await pybt.connect(participant).depositTokens(participant.address, 1000);
 
@@ -70,18 +68,18 @@ describe("PYBT Contract", function () {
     await pybt.connect(participant).withdrawYield(participant.address);
 
     const finalBalance = await pybt.balanceOf(participant.address);
-    expect(finalBalance).to.be.closeTo(2500, 10); // Account for yield calculation
+    expect(finalBalance).to.be.closeTo(2500, 10); 
   });
 
   it("should distribute final tokens and yield correctly", async function () {
     await pybt.connect(owner).mint(participant.address, 1000);
-    await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 30]); // Move time forward by 30 days
+    await ethers.provider.send("evm_increaseTime", [60 * 60 * 24 * 30]); 
 
     await pybt.connect(participant).depositTokens(participant.address, 1000);
 
     await pybt.distributeFinal();
 
     const finalYieldAmount = await pybt.yieldAmount(participant.address);
-    expect(finalYieldAmount).to.equal(500); // Assuming yield calculation was 500 tokens
+    expect(finalYieldAmount).to.equal(500); 
   });
 });

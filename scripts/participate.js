@@ -1,8 +1,6 @@
 const { ethers } = require("hardhat");
 const fs = require("fs").promises;
 async function main() {
-    //   const walletAddresses = require("./whiteList/walletAddresses.json");
-  
   const data = await fs.readFile("whiteList/walletAddresses.json", "utf8");
   const participants = JSON.parse(data);
   const participantAddresses = Object.values(participants);
@@ -16,7 +14,7 @@ async function main() {
 
   for (let index in participantAddresses) {
     const participant = participantAddresses[index];
-    const depositAmount = Math.random() * 0.56; // Random amount between 0 and 0.56
+    const depositAmount = Math.random() * 0.56; // Random amount between 0 and 0.56 ( assuming each whitiste participant will deposit between 0 and 0.56 PYBT)
     await PYBT.depositTokens(
       participant,
       ethers.utils.parseEther(depositAmount.toString())

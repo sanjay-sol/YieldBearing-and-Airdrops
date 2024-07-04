@@ -3,26 +3,35 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-error AlreadyClaimed();
-error InvalidProof();
-
-contract YieldBearingMerkleDistributor {
+contract YieldBearingMerkleDistributor is Ownable {
     using SafeERC20 for IERC20;
 
     address public immutable token;
     bytes32 public immutable merkleRoot;
     uint256 public dropAmount;
 
+    uint256 public totalYieldReceived; // Total native token yield received
     mapping(address => bool) public claimed;
+    mapping(address => uint256) public yieldEarned;
 
     event Claimed(address indexed account, uint256 dropAmount);
     event Distributed(address[] addresses, uint256 amountPerAddress);
 
-    constructor(address token_, bytes32 merkleRoot_, uint256 dropAmount_) {
+    constructor(address token_, bytes32 merkleRoot_, uint256 dropAmount_, address owner) Ownable(owner) {
         token = token_;
         merkleRoot = merkleRoot_;
         dropAmount = dropAmount_;
+    }
+
+    /**
+     * @dev Allows PrivateYieldBearingERC20 to send native token yield to this contract.
+     * @param amount The amount of native tokens to receive.
+     */
+    function receiveYield(uint256 amount) external {
+        require(msg.sender == token, "Only PrivateYieldBearingERC20 can call this function");
+        totalYieldReceived += amount;
     }
 
     /**
@@ -37,16 +46,17 @@ contract YieldBearingMerkleDistributor {
         if (!MerkleProof.verify(merkleProof, merkleRoot, node)) revert InvalidProof();
 
         claimed[account] = true;
-        require(IERC20(token).transfer(account, dropAmount), "MerkleDistributor: Transfer failed");
+        uint256 totalAmount = dropAmount + getEarnedYield(account);
+        require(IERC20(token).transfer(account, totalAmount), "MerkleDistributor: Transfer failed");
 
-        emit Claimed(account, dropAmount);
+        emit Claimed(account, totalAmount);
     }
 
     /**
      * @dev Distributes tokens equally among specified addresses.
      * @param addresses The array of addresses to distribute tokens to.
      */
-    function distributeTokens(address[] memory addresses) public {
+    function distributeTokens(address[] memory addresses) external onlyOwner {
         uint256 totalSupply = IERC20(token).balanceOf(address(this));
         uint256 tokensToDistribute = totalSupply / 2; // Distribute half of the tokens
         uint256 amountPerAddress = tokensToDistribute / addresses.length;
@@ -59,59 +69,30 @@ contract YieldBearingMerkleDistributor {
 
         emit Distributed(addresses, amountPerAddress);
     }
+
+    /**
+     * @dev Calculates the earned yield for an account based on the proportion of time held.
+     * @param account The account to calculate yield for.
+     */
+    function getEarnedYield(address account) public view returns (uint256) {
+        if (claimed[account]) return 0; // Already claimed
+
+        uint256 totalSupply = IERC20(token).totalSupply();
+        uint256 accountBalance = IERC20(token).balanceOf(account);
+        uint256 yieldShare = (totalYieldReceived * accountBalance) / totalSupply;
+
+        return yieldShare;
+    }
+
+    /**
+     * @dev Internal function to verify Merkle proof.
+     * @param merkleProof The Merkle proof array.
+     * @param account The account to verify.
+     */
+    function verifyProof(bytes32[] memory merkleProof, address account) internal view returns (bool) {
+        bytes32 node = keccak256(abi.encodePacked(account));
+        return MerkleProof.verify(merkleProof, merkleRoot, node);
+    }
+
+    error InvalidProof();
 }
-
-
-
-// pragma solidity ^0.8.0;
-
-// import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-// import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-
-// error AlreadyClaimed();
-// error InvalidProof();
-
-// contract MerkleDistributor {
-//     using SafeERC20 for IERC20;
-
-//     address public immutable token;
-//     bytes32 public immutable merkleRoot;
-//     uint256 public dropAmount;
-
-//     mapping(address => uint256) public addressesClaimed;
-
-//     event Claimed(address _from, uint256 _dropAmount);
-//     event Distributed(address[] _addresses, uint256 _amountPerAddress);
-
-//     constructor(address token_, bytes32 merkleRoot_, uint256 dropAmount_) {
-//         token = token_;
-//         merkleRoot = merkleRoot_;
-//         dropAmount = dropAmount_;
-//     }
-
-//     function claim(bytes32[] calldata merkleProof) external {
-//         address account = msg.sender;
-//         uint256 index = addressesClaimed[account];
-//         require(index == 0, "MerkleDistributor: Account not eligible for claim");
-
-//         bytes32 node = keccak256(abi.encodePacked(account));
-//         if (!MerkleProof.verify(merkleProof, merkleRoot, node)) revert InvalidProof();
-
-//         addressesClaimed[account] = 1;
-//         require(IERC20(token).transfer(account, dropAmount), "MerkleDistributor: Transfer failed");
-
-//         emit Claimed(account, dropAmount);
-//     }
-
-//     function distributeTokens(address[] memory addresses) public {
-//         uint256 totalSupply = IERC20(token).balanceOf(address(this));
-//         uint256 tokensToDistribute = totalSupply / 2; // Distribute half of the tokens
-//         uint256 amountPerAddress = tokensToDistribute / addresses.length;
-
-//         for (uint256 i = 0; i < addresses.length; i++) {
-//             IERC20(token).safeTransfer(addresses[i], amountPerAddress);
-//         }
-
-//         emit Distributed(addresses, amountPerAddress);
-//     }
-// }
