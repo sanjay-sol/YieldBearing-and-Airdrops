@@ -2,7 +2,7 @@ const { MerkleTree } = require("merkletreejs");
 const KECCAK256 = require("keccak256");
 const { expect } = require("chai");
 
-describe("MerkleDistributor", () => {
+describe("AirdropMerkleDistributor", () => {
   let signer1, signer2, signer3, signer4, signer5, signer6, signer7, signer8;
   let walletAddresses,
     leaves,
@@ -29,11 +29,11 @@ describe("MerkleDistributor", () => {
     leaves = walletAddresses.map((x) => KECCAK256(x));
     tree = new MerkleTree(leaves, KECCAK256, { sortPairs: true });
 
-    pybt = await ethers.getContractFactory("PYBT", signer1);
+    pybt = await ethers.getContractFactory("AirdropPYBT", signer1);
     token = await pybt.deploy();
 
     MerkleDistributor = await ethers.getContractFactory(
-      "MerkleDistributor",
+      "AirdropMerkleDistributor",
       signer1
     );
     distributor = await MerkleDistributor.deploy(
@@ -68,6 +68,13 @@ describe("MerkleDistributor", () => {
         distributor.connect(signer1).claim(proof2)
       ).to.be.revertedWith("InvalidProof");
     });
+
+    // it("emits a successful event", async () => {
+    //   const proof = tree.getHexProof(KECCAK256(signer2.address));
+    //   await expect(distributor.connect(signer1).claim(proof))
+    //     .to.emit(distributor, "Claimed")
+    //     .withArgs(signer1.address, 500);
+    // });
 
     it("emits a successful event", async () => {
       const claimedSigner = signer1;

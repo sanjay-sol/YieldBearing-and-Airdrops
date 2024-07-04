@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 error AlreadyClaimed();
 error InvalidProof();
 
-contract MerkleDistributor {
+contract YieldBearingMerkleDistributor {
     using SafeERC20 for IERC20;
 
     address public immutable token;

@@ -2,22 +2,12 @@ const { ethers } = require("hardhat");
 const fs = require("fs").promises;
 
 async function main() {
-    // read the PYBT_address from whitelist/PYBT_address.json
-
-    const add = await fs.readFile(
-      "whiteList/PYBT_address.json",
-      "utf8"
-    );
-
-  const tokenAddress = JSON.parse(add);
+  const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
   const data = await fs.readFile("whiteList/checkList.json", "utf8");
   const participants = JSON.parse(data);
   const participantAddresses = Object.values(participants);
-  const Token = await ethers.getContractAt(
-    "PrivateYieldBearingERC20",
-    tokenAddress
-  );
+  const Token = await ethers.getContractAt("AirdropPYBT", tokenAddress);
 
   for (let address of participantAddresses) {
     const balance = await Token.balanceOf(address);

@@ -1,14 +1,8 @@
-const { MerkleTree } = require("merkletreejs");
-const KECCAK256 = require("keccak256");
-const { BigNumber } = require("ethers");
-const fs = require("fs").promises;
+const { ethers } = require("hardhat");
 
 async function main() {
-  [signer1, signer2, signer3, signer4, signer5, signer6, signer7, signer8] =
-    await ethers.getSigners();
-
-  const walletAddresses = [
-    signer1,
+  const [
+    deployer,
     signer2,
     signer3,
     signer4,
@@ -16,107 +10,79 @@ async function main() {
     signer6,
     signer7,
     signer8,
-  ].map((s) => s.address);
+  ] = await ethers.getSigners();
 
-  const leaves = walletAddresses.map((x) => KECCAK256(x));
-  const tree = new MerkleTree(leaves, KECCAK256, { sortPairs: true });
+  const walletAddresses = [
+    deployer.address,
+    signer2.address,
+    signer3.address,
+    signer4.address,
+    signer5.address,
+    signer6.address,
+    signer7.address,
+    signer8.address,
+  ];
 
-  const Pybt = await ethers.getContractFactory("PYBT", signer1);
-  const token = await Pybt.deploy();
-
-  const MerkleDistributor = await ethers.getContractFactory(
-    "MerkleDistributor",
-    signer1
+  const leaves = walletAddresses.map((address) =>
+    ethers.utils.solidityKeccak256(["address"], [address])
   );
 
+  // Create the Merkle Tree
+  const { MerkleTree } = require("merkletreejs");
+  const tree = new MerkleTree(leaves, ethers.utils.keccak256, {
+    sortPairs: true,
+  });
+
+  // Deploy the PYBT contract
+  const PYBT = await ethers.getContractFactory("PrivateYieldBearingERC20");
+  const token = await PYBT.deploy(deployer.address, {
+    value: ethers.utils.parseEther("1.0"),
+  }); // Send 1 ETH
+
+  // Deploy the MerkleDistributor contract
+  const MerkleDistributor = await ethers.getContractFactory(
+    "YieldBearingMerkleDistributor"
+  );
   const distributor = await MerkleDistributor.deploy(
     token.address,
     tree.getHexRoot(),
-    BigNumber.from("1000000000000000000")
+    ethers.utils.parseEther("1.0") // Example: 1 ETH equivalent in wei
   );
 
-  // Mint 18 tokens to the distributor contract
-  const totalMintAmount = BigNumber.from("9000000000000000000");
-  await token.connect(signer1).mint(distributor.address, totalMintAmount);
+  // Mint tokens to the distributor contract
+  const totalMintAmount = ethers.utils.parseEther("9.0"); // 9 ETH equivalent in wei
+  await token.connect(deployer).mint(distributor.address, totalMintAmount);
 
-  console.log("PYBT address:", token.address);
-  console.log("MerkleDistributor:", distributor.address);
-  console.log("signer1:", signer1.address);
+  console.log("PYBT Token deployed to:", token.address);
+  console.log("MerkleDistributor deployed to:", distributor.address);
+  console.log("Distributor deployed by:", deployer.address);
 
-  const indexedAddresses = {};
-  walletAddresses.forEach((x, idx) => (indexedAddresses[idx] = x));
+  // Store wallet addresses in a JSON file
+  const fs = require("fs").promises;
+  const indexedAddresses = walletAddresses.reduce((acc, address, index) => {
+    acc[index] = address;
+    return acc;
+  }, {});
 
-  const serializedAddresses = JSON.stringify(indexedAddresses);
-  await fs.writeFile("whiteList/walletAddresses.json", serializedAddresses);
+  await fs.writeFile(
+    "whiteList/walletAddresses.json",
+    JSON.stringify(indexedAddresses)
+  );
+     await fs.writeFile(
+         "whiteList/PYBT_address.json",
+            JSON.stringify(token.address)
+     );
 
+  // Distribute tokens to whitelisted addresses
   await distributor.distributeTokens(walletAddresses);
 
   console.log("Tokens distributed to whitelisted addresses.");
 }
 
-// npx hardhat run --network localhost scripts/deploy.js
-
+// Execute the deployment script
 main()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
     process.exit(1);
   });
-
-// const { MerkleTree } = require("merkletreejs");
-// const KECCAK256 = require("keccak256");
-// const { BigNumber } = require("ethers");
-// const fs = require("fs").promises;
-
-// async function main() {
-//   [signer1, signer2, signer3, signer4, signer5, signer6, signer7, signer8] =
-//     await ethers.getSigners();
-//   walletAddresses = [
-//     signer1,
-//     signer2,
-//     signer3,
-//     signer4,
-//     signer5,
-//     signer6,
-//     signer7,
-//     signer8,
-//   ].map((s) => s.address);
-//   leaves = walletAddresses.map((x) => KECCAK256(x));
-//   tree = new MerkleTree(leaves, KECCAK256, { sortPairs: true });
-//   TofuCoin = await ethers.getContractFactory("PYBT", signer1);
-//   token = await TofuCoin.deploy();
-//   MerkleDistributor = await ethers.getContractFactory(
-//     "MerkleDistributor",
-//     signer1
-//   );
-
-//   distributor = await MerkleDistributor.deploy(
-//     token.address,
-//     tree.getHexRoot(),
-//     BigNumber.from("1000000000000000000")
-//   );
-
-//   await token
-//     .connect(signer1)
-//     .mint(distributor.address, BigNumber.from("9000000000000000000"));
-
-//   console.log("TofuCoin:", token.address);
-//   console.log("MerkleDistributor:", distributor.address);
-//   console.log("signer1:", signer1.address);
-
-//   const indexedAddresses = {};
-//   walletAddresses.map((x, idx) => (indexedAddresses[idx] = x));
-
-//   const serializedAddresses = JSON.stringify(indexedAddresses);
-
-//   await fs.writeFile("whiteList/walletAddresses.json", serializedAddresses);
-// }
-
-// // npx hardhat run --network localhost scripts/deploy.js
-
-// main()
-//   .then(() => process.exit(0))
-//   .catch((error) => {
-//     console.error(error);
-//     process.exit(1);
-//   });
