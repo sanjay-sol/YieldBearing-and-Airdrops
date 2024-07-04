@@ -1,7 +1,11 @@
 
 
 # Yield-Bearing Project
+- [Interaction ](#Interaction)
 ## Quick Workflow
+
+ 
+
 ```
 1. Initial Deployment and Token Minting
    |-> Developer deploys smart contract with 1 ETH
@@ -72,5 +76,95 @@ Security Update: When a withdrawal occurs, the Merkle tree is reconstructed to e
 #### 6. Final Yield Distribution
 End of Period: At the end of the thirty-day yield period, the remaining tokens and the generated yield are distributed proportionally to all participants who have not withdrawn their tokens.
 Security: This final distribution also uses Merkle trees to ensure secure and accurate distribution of tokens and yield.
+
+
+# Interaction
+
+## Setting Up Development Environment
+
+1. **Start Local Blockchain:**
+   - Open Terminal 1:
+     ```
+     npx hardhat node
+     ```
+   This starts a local Ethereum blockchain with accounts pre-funded with fake ETH for testing.
+
+2. **Compile Contracts:**
+   - Open Terminal 2:
+     ```
+     npx hardhat compile
+     ```
+   Compiles your Solidity contracts defined in the project.
+
+##  Contracts Interactions
+
+3. **Run Airdrop Script:**
+```
+npx hardhat run --network localhost scripts/airdrop.js
+```
+Executes the airdrop script to distribute tokens based on a specified logic.
+
+4. **Check Airdrop Balance:**
+- Run:
+  ```
+  npx hardhat run --network localhost scripts/airdropChackbalance.js
+  ```
+Copy and paste the airdrop address to check the balance.
+
+## Testing Merkle Proofs
+
+5. **Test Claims using Merkle Proofs:**
+```
+npx hardhat test
+
+```
+
+Runs tests to validate claiming tokens using Merkle proofs.
+
+## Yield Bearing Contract Interactions
+
+6. **Deploy Yield Bearing Contract:**
+```
+npx hardhat run --network localhost scripts/deploy.js
+
+```
+Deploys the Yield Bearing contract on the local blockchain.
+
+7. **Participant Interaction:**
+```
+npx hardhat run --network localhost scripts/participate.js
+
+
+```
+Participants interact with the contract by depositing tokens.
+
+8. **Calculate Yield:**
+```
+npx hardhat run --network localhost scripts/calculateYield.js
+
+```
+Calculates the yield participants can earn based on their deposits.
+
+9. **Withdraw Yield:**
+```
+npx hardhat run --network localhost scripts/withdraw.js
+
+
+```
+Participants withdraw their calculated yield.
+
+10. **Verify Zero Yield After Withdrawal:**
+ 
+   ```
+   npx hardhat run --network localhost scripts/calculateYield.js
+   ```
+ Ensure that the withdrawn account shows zero yield after withdrawal.
+
+11. **Final Distribution:**
+ ```
+ npx hardhat run --network localhost scripts/finalDistribution.js
+ ```
+ Automatically triggers after 30 days to distribute remaining yields.
+
 
 
